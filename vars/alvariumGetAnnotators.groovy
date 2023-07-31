@@ -6,11 +6,8 @@
 import java.util.Map;
 import java.util.HashMap;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.alvarium.DefaultSdk;
-import com.alvarium.Sdk;
 import com.alvarium.SdkInfo;
 
 import com.alvarium.contracts.AnnotationType;
@@ -18,28 +15,18 @@ import com.alvarium.contracts.AnnotationType;
 import com.alvarium.annotators.Annotator;
 import com.alvarium.annotators.AnnotatorConfig;
 import com.alvarium.annotators.AnnotatorFactory;
-import com.alvarium.annotators.ChecksumAnnotator;
 import com.alvarium.annotators.ChecksumAnnotatorProps;
-import com.alvarium.annotators.SourceCodeAnnotator;
 import com.alvarium.annotators.SourceCodeAnnotatorProps;
 
 import com.alvarium.utils.PropertyBag;
 import com.alvarium.utils.ImmutablePropertyBag;
 
-def call(List<String> annotatorKinds, String artifactPath=null) {
-    Logger logger = LogManager.getRootLogger()
-
-    String pipelineId = "${JOB_NAME}/${BUILD_NUMBER}".toString()
-    String jsonString
-
-    // Loading SDK configuration requires Jenkins' Config File Provider plugin
-    // and a populated SDK configuration file with id `alvarium-config`
-    configFileProvider(
-        [configFile(fileId: 'alvarium-config', variable: 'SDK_INFO')]) {
-        jsonString = new File("$SDK_INFO").text
-    }
-
-    SdkInfo sdkInfo = getSdkInfoFromJson(jsonString)
+def call(
+    List<String> annotatorKinds,
+    String artifactPath=null,
+    SdkInfo sdkInfo,
+    Logger logger
+) {
 
     AnnotatorFactory annotatorFactory = new AnnotatorFactory();
     List<Annotator> annotators = []
@@ -58,17 +45,9 @@ def call(List<String> annotatorKinds, String artifactPath=null) {
                     artifactPath,
                     checksum.getAbsolutePath()
                 )
-
+                properties.put(AnnotationType.CHECKSUM.name(), props)
                 annotator = annotatorFactory.getAnnotator(cfg, sdkInfo, logger)
-                final Annotator[] a = [annotator]
-                DefaultSdk sdk = new DefaultSdk(a, sdkInfo, logger)
-                PropertyBag ctx = new ImmutablePropertyBag(
-                    Map.of(AnnotationType.CHECKSUM.name(), props)
-                )
-
-                checksumValue = checksum.text
-                sdk.mutate(ctx, pipelineId.getBytes(), checksumValue.getBytes())
-                sdk.close()
+                annotators.add(annotator)
                 break;
 
             case "source-code":
@@ -91,20 +70,10 @@ def call(List<String> annotatorKinds, String artifactPath=null) {
                 break;
         }
     }
-    final Annotator[] a = annotators
+    Annotator[] a = annotators
     PropertyBag ctx = initCtx(properties)
-    DefaultSdk sdk = new DefaultSdk(a, sdkInfo, logger)
-    sdk.create(ctx, pipelineId.getBytes())
-    sdk.close()
 
-}
-
-//see: https://stackoverflow.com/questions/50855961/notserializableexception-in-jenkinsfile
-// for why @NonCPS is used. This won't compile except in a Jenkins environment
-@NonCPS 
-def getSdkInfoFromJson(String json) {
-    def info = SdkInfo.fromJson(json)
-    return info
+    return [a, ctx]
 }
 
 @NonCPS
