@@ -93,14 +93,26 @@ Executes the passed annotators and instantiates an instance of the Alvairum Java
 
 **`List<String> annotatorKinds`**: takes a list of annotator names identical to the format used in Alvarium configs that will be executed. The method will throw an error if there is no configuration entry for the annotator in the configuration file.
 
-**`String artifactPath`**: Optional parameter that is only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact. The current implementation expects an existing artifact checksum at "\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"
+**`Map<String,String> optionalParameters=[:]`**: Supports optional parameters (`artifactPath`, `checksumPath`, `sourceCodeChecksumPath`)
+
+`artifactPath`: Only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact.
+
+`checksumPath`: Used to locate the artifact checksum, default value if not provided is `"\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"`
+
+`sourceCodeChecksumPath`: Used to locate the source code checkusm, default value if not provided is `"${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"`
 
 ### **alvariumMutate(List<String> annotatorKinds, String artifactPath=null, byte[] newData)**
 Executes the passed annotators and instantiates an instance of the Alvairum Java SDK to publish them using the `Sdk.mutate()` method and sets the source annotation (represents lineage) key as the string `{pipelineID}/{buildNo}` and the new data key using `byte[] newData`. This method is usually called after an artifact is created with annotators relating to artifact verification.
 
 **`List<String> annotatorKinds`**: takes a list of annotator names identical to the format used in Alvarium configs that will be executed. The method will throw an error if there is no configuration entry for the annotator in the configuration file.
 
-**`String artifactPath`**: Optional parameter that is only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact. The current implementation expects an existing artifact checksum at "\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"
+**`Map<String,String> optionalParameters=[:]`**: Supports optional parameters (`artifactPath`, `checksumPath`, `sourceCodeChecksumPath`)
+
+`artifactPath`: Only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact.
+
+`checksumPath`: Used to locate the artifact checksum, default value if not provided is `"\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"`
+
+`sourceCodeChecksumPath`: Used to locate the source code checkusm, default value if not provided is `"${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"`
 
 **`String newData`**: Used to define a new key for the annotations. This is usually a unique identifier for the artifact being produced by the pipeline (i.e., checksum or tag).
 
@@ -110,7 +122,13 @@ Executes the passed annotators and instantiates an instance of the Alvairum Java
 
 **`List<String> annotatorKinds`**: takes a list of annotator names identical to the format used in Alvarium configs that will be executed. The method will throw an error if there is no configuration entry for the annotator in the configuration file.
 
-**`String artifactPath`**: Optional parameter that is only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact. The current implementation expects an existing artifact checksum at "\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"
+**`Map<String,String> optionalParameters=[:]`**: Supports optional parameters (`artifactPath`, `checksumPath`, `sourceCodeChecksumPath`)
+
+`artifactPath`: Only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact.
+
+`checksumPath`: Used to locate the artifact checksum, default value if not provided is `"\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"`
+
+`sourceCodeChecksumPath`: Used to locate the source code checkusm, default value if not provided is `"${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"`
 
 Here is an example Jenkinsfile that can be used to build the alvarium Java SDK
 
@@ -177,7 +195,11 @@ pipeline {
                     // TODO (Ali Amin): Find a way to persist the checksum
                     script {
                         def artifactChecksum = readFile "/${JENKINS_HOME}/jobs/${JOB_NAME}/${BUILD_NUMBER}/alvarium-sdk-1.0-SNAPSHOT.jar.checksum" 
-                        alvariumMutate(['checksum'], '${WORKSPACE}/target/alvarium-sdk-1.0-SNAPSHOT.jar', artifactChecksum.bytes)
+                        def optionalParameters = [
+                          'artifactPath' :'${WORKSPACE}/target/alvarium-sdk-1.0-SNAPSHOT.jar',
+                          'checksumPath' : '/${JENKINS_HOME}/jobs/${JOB_NAME}/${BUILD_NUMBER}/alvarium-sdk-1.0-SNAPSHOT.jar.checksum'
+                        ]
+                        alvariumMutate(['checksum'], optionalParameters, artifactChecksum.bytes)
                     }   
                 }
             }

@@ -23,7 +23,9 @@ import com.alvarium.utils.ImmutablePropertyBag;
 
 def call(
     List<String> annotatorKinds,
-    String artifactPath=null,
+    String artifactPath,
+    String checksumPath,
+    String sourceCodeChecksumPath,
     SdkInfo sdkInfo,
     Logger logger
 ) {
@@ -39,7 +41,7 @@ def call(
             case "checksum":
                 File artifact = new File(artifactPath);
                 File checksum = new File(
-                    "${JENKINS_HOME}/jobs/${JOB_NAME}/${BUILD_NUMBER}/${artifact.getName()}.checksum"
+                    checksumPath
                 )
                 ChecksumAnnotatorProps props = new ChecksumAnnotatorProps(
                     artifactPath,
@@ -54,7 +56,7 @@ def call(
                 annotator = annotatorFactory.getAnnotator(cfg, sdkInfo, logger)
                 SourceCodeAnnotatorProps props = new SourceCodeAnnotatorProps(
                     "${WORKSPACE}",
-                    "${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"
+                    sourceCodeChecksumPath
                 )
                 properties.put(AnnotationType.SourceCode.name(), props)
                 annotators.add(annotator)
