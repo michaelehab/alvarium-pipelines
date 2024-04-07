@@ -16,7 +16,7 @@ The [Config File Provider](https://plugins.jenkins.io/config-file-provider) plug
 > Ensure that public and private keys are present at the paths provided in `signature.public.path` and `signature.private.path`. See https://github.com/project-alvarium/example-java/tree/main/src/main/resources for examples.
 >
 > ⚠️
-> The library currently only supports "source-code", "checksum", and "vulnerability" annotators... Support for conventional alvarium annotators may be added at a later stage.
+> The library currently only supports "source-code", "checksum", "sbom", and "vulnerability" annotators... Support for conventional alvarium annotators may be added at a later stage.
 
 
 ```jsonc
@@ -25,6 +25,11 @@ The [Config File Provider](https://plugins.jenkins.io/config-file-provider) plug
     {
       "kind": "source-code"
     },
+    {
+      "kind": "sbom",
+      "type": "spdx",
+      "version": "SPDX-2.2"
+    }
     {
       "kind": "checksum"
     },
@@ -88,50 +93,27 @@ Then by adding the following line on top of the Jenkinsfile
 
 ## Usage
 
-### **alvariumCreate(List<String> annotatorKinds, String artifactPath=null)**
+### **alvariumCreate(List<String> annotatorKinds, Map<String, String> optionalParameters)**
+### **alvariumTransit(List<String> annotatorKinds, Map<String, String> optionalParameters)**
 
-Executes the passed annotators and instantiates an instance of the Alvairum Java SDK to publish them using the `Sdk.create()` method and sets the annotation key as the string `{pipelineID}/{buildNo}`
+Executes the passed annotators and instantiates an instance of the Alvairum Java SDK to publish them using the `Sdk.create()` or `Sdk.transit()` methods and sets the annotation key as the string `{pipelineID}/{buildNo}`
 
 **`List<String> annotatorKinds`**: takes a list of annotator names identical to the format used in Alvarium configs that will be executed. The method will throw an error if there is no configuration entry for the annotator in the configuration file.
 
-**`Map<String,String> optionalParameters=[:]`**: Supports optional parameters (`artifactPath`, `checksumPath`, `sourceCodeChecksumPath`)
+**`Map<String,String> optionalParameters=[:]`**: Supports optional parameters (`artifactPath`, `checksumPath`, `sourceCodeChecksumPath`, `sbomPath`)
 
-`artifactPath`: Only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact.
+- `artifactPath`: Only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact.
 
-`checksumPath`: Used to locate the artifact checksum, default value if not provided is `"\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"`
+- `checksumPath`: Used to locate the artifact checksum, default value if not provided is `"\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"`
 
-`sourceCodeChecksumPath`: Used to locate the source code checkusm, default value if not provided is `"${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"`
+- `sourceCodeChecksumPath`: Used to locate the source code checkusm, default value if not provided is `"${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"`
 
-### **alvariumMutate(List<String> annotatorKinds, String artifactPath=null, byte[] newData)**
+- `sbomPath`: The location of the SBoM file that the build components are validated against
+
+### **alvariumMutate(List<String> annotatorKinds, Map<String, String> optionalParameters, byte[] newData)**
 Executes the passed annotators and instantiates an instance of the Alvairum Java SDK to publish them using the `Sdk.mutate()` method and sets the source annotation (represents lineage) key as the string `{pipelineID}/{buildNo}` and the new data key using `byte[] newData`. **Currently the use-case for this method in a pipeline is not well-defined and will probably have no use.
 
-**`List<String> annotatorKinds`**: takes a list of annotator names identical to the format used in Alvarium configs that will be executed. The method will throw an error if there is no configuration entry for the annotator in the configuration file.
-
-**`Map<String,String> optionalParameters=[:]`**: Supports optional parameters (`artifactPath`, `checksumPath`, `sourceCodeChecksumPath`)
-
-`artifactPath`: Only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact.
-
-`checksumPath`: Used to locate the artifact checksum, default value if not provided is `"\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"`
-
-`sourceCodeChecksumPath`: Used to locate the source code checkusm, default value if not provided is `"${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"`
-
-**`String newData`**: Used to define a new key for the annotations. This is usually a unique identifier for the artifact being produced by the pipeline (i.e., checksum or tag).
-
-### **alvariumTransit(List<String> annotatorKinds, String artifactPath=null)**
-
-Executes the passed annotators and instantiates an instance of the Alvairum Java SDK to publish them using the `Sdk.transit()`.
-
-**`List<String> annotatorKinds`**: takes a list of annotator names identical to the format used in Alvarium configs that will be executed. The method will throw an error if there is no configuration entry for the annotator in the configuration file.
-
-**`Map<String,String> optionalParameters=[:]`**: Supports optional parameters (`artifactPath`, `checksumPath`, `sourceCodeChecksumPath`)
-
-`artifactPath`: Only required when "checksum" annotator is passed in the `annotatorKinds` list and will throw an error if not present when required by the "checksum" annotator. This parameter is used to locate the artifact.
-
-`checksumPath`: Used to locate the artifact checksum, default value if not provided is `"\${JENKINS_HOME}/jobs/\${JOB_NAME}/\${BUILD_NUMBER}/\${artifactName}.checksum"`
-
-`sourceCodeChecksumPath`: Used to locate the source code checkusm, default value if not provided is `"${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"`
-
-Here is an example Jenkinsfile that can be used to build the alvarium Java SDK
+### Here is an example Jenkinsfile that can be used to build the alvarium Java SDK
 
 ```Jenkinsfile
 @Library('alvarium-pipelines@main') _
@@ -166,8 +148,13 @@ pipeline {
 
         stage('alvarium - pre-build annotations') {
             steps {
-                def optionalParams = ['sourceCodeChecksumPath':"${JENKINS_HOME}/jobs/${JOB_NAME}/${BUILD_NUMBER}/sc_checksum"]
-                alvariumCreate(['source-code', 'vulnerability'], optionalParams)
+              script{
+                def optionalParams = [
+                  'sourceCodeChecksumPath':"${JENKINS_HOME}/jobs/${JOB_NAME}/${BUILD_NUMBER}/sc_checksum",
+                  'sbomPath': "${WORKSPACE}/sbom.spdx.json"
+                ]
+                alvariumCreate(['source-code', 'vulnerability', 'sbom'], optionalParams)
+              }
             }
         }
 

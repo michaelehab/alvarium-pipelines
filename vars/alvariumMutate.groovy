@@ -1,7 +1,8 @@
 @GrabResolver(name='jitpack.io', root='https://jitpack.io/')
 @Grab("com.google.errorprone:error_prone_annotations:2.20.0") // fixes alvarium import error
-@Grab(group='com.github.project-alvarium', module='alvarium-sdk-java', version='d18f5aeadd') 
-@Grab("org.apache.logging.log4j:log4j-core:2.15.0")
+@Grab(group='org.slf4j', module='slf4j-api', version='2.0.12')
+@Grab(group='com.github.project-alvarium', module='alvarium-sdk-java', version='7e53f04e3e') 
+@Grab("org.apache.logging.log4j:log4j-core:2.21.0")
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,12 +18,19 @@ def call(List<String> annotatorKinds, Map<String,String> optionalParameters=[:],
     String artifactPath = optionalParameters['artifactPath'] ? optionalParameters['artifactPath'] : null
     String checksumPath
     String sourceCodeChecksumPath = optionalParameters['sourceCodeChecksumPath'] ? optionalParameters['sourceCodeChecksumPath'] : "${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"
+    String sbomPath = optionalParameters['sbomPath']
 
     if (annotatorKinds.contains('checksum')) {
-        if(artifactPath == null){
-        error "Checksum annotator requires the `artifactPath` in optionalParameters"
+        if (artifactPath == null) {
+            error "Checksum annotator requires the `artifactPath` in optionalParameters"
         }
         checksumPath = optionalParameters['checksumPath'] ? optionalParameters['checksumPath'] : "${JENKINS_HOME}/jobs/${JOB_NAME}/${BUILD_NUMBER}/${new File(artifactPath).getName()}.checksum"
+    }
+
+    if (annotatorKinds.contains('sbom')) {
+        if (sbomPath == null) {
+            error "SBoM annotator requires the `sbomPath` parameter in optionalParameters"
+        }
     }
     
     Logger logger = LogManager.getRootLogger()
@@ -44,6 +52,7 @@ def call(List<String> annotatorKinds, Map<String,String> optionalParameters=[:],
         artifactPath,
         checksumPath,
         sourceCodeChecksumPath,
+        sbomPath,
         sdkInfo,
         logger    
     )
