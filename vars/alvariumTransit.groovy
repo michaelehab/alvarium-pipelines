@@ -14,6 +14,8 @@ import com.alvarium.annotators.Annotator;
 import com.alvarium.utils.PropertyBag;
 
 def call(List<String> annotatorKinds, Map<String,String> optionalParameters=[:]) {
+    println "TAG IS on the next line"
+    println env.TAG
     String artifactPath = optionalParameters['artifactPath'] ? optionalParameters['artifactPath'] : null
     String checksumPath
     String sourceCodeChecksumPath = optionalParameters['sourceCodeChecksumPath'] ? optionalParameters['sourceCodeChecksumPath'] : "${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"
