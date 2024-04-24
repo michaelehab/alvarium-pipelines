@@ -1,6 +1,6 @@
 @GrabResolver(name='jitpack.io', root='https://jitpack.io/')
 @Grab("com.google.errorprone:error_prone_annotations:2.20.0") // fixes alvarium import error
-@Grab(group='com.github.michaelehab', module='alvarium-sdk-java', version='6b9950fb33') 
+@Grab(group='com.github.michaelehab', module='alvarium-sdk-java', version='fb347ac5bf') 
 @Grab("org.apache.logging.log4j:log4j-core:2.23.1")
 
 import org.apache.logging.log4j.LogManager;
