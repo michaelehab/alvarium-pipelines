@@ -33,6 +33,7 @@ def call(
     AnnotatorFactory annotatorFactory = new AnnotatorFactory();
     List<Annotator> annotators = []
     Map<String, Object> properties = new HashMap<String, Object>()
+    properties.put("CiCdTag", env.TAG)
 
     for (annotatorKind in annotatorKinds) {
         Annotator annotator
