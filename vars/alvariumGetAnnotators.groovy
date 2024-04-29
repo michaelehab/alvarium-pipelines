@@ -37,7 +37,7 @@ def call(
     Map<String, Object> properties = new HashMap<String, Object>()
     Map<LayerType, TagWriter> overrides = new HashMap<>();
 
-    overrides.put(LayerType.CiCd, () -> {
+    overrides.put(LayerType.CiCd, {
         return env.GIT_COMMIT;
     });
 
