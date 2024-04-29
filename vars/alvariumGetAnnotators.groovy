@@ -37,12 +37,9 @@ def call(
     Map<String, Object> properties = new HashMap<String, Object>()
     Map<LayerType, TagWriter> overrides = new HashMap<>();
 
-    overrides.put(LayerType.CiCd, new TagWriter() {
-        @Override
-        String writeTag() {
-            return "Custom tag value for Application"
-        }
-    })
+    overrides.put(LayerType.CiCd, [
+        writeTag: { -> env['GIT_COMMIT'] } as TagWriter
+    ])
 
     properties.put("overrides", overrides)
 
