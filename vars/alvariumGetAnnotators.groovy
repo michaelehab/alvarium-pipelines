@@ -23,6 +23,7 @@ import com.alvarium.annotators.SourceCodeAnnotatorProps;
 import com.alvarium.utils.PropertyBag;
 import com.alvarium.utils.ImmutablePropertyBag;
 
+@NonCPS
 def call(
     List<String> annotatorKinds,
     String artifactPath,
@@ -37,9 +38,12 @@ def call(
     Map<String, Object> properties = new HashMap<String, Object>()
     Map<LayerType, TagWriter> overrides = new HashMap<>();
 
-    overrides.put(LayerType.CiCd, [
-        writeTag: { -> env['GIT_COMMIT'] } as TagWriter
-    ])
+    overrides.put(LayerType.CiCd, new TagWriter() {
+        @Override
+        String writeTag() {
+            return "Custom tag value for Application"
+        }
+    })
 
     properties.put("overrides", overrides)
 
@@ -112,8 +116,4 @@ def getAnnotatorConfig(sdkInfo, annotatorKind) {
                 break;
         }
     }
-}
-
-String getCiCdTag(){
-    return System.getenv("GIT_COMMIT");
 }
