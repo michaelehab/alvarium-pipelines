@@ -1,6 +1,6 @@
 @GrabResolver(name='jitpack.io', root='https://jitpack.io/')
 @Grab("com.google.errorprone:error_prone_annotations:2.20.0") // fixes alvarium import error
-@Grab(group='com.github.michaelehab', module='alvarium-sdk-java', version='fb347ac5bf') 
+@Grab(group='com.github.michaelehab', module='alvarium-sdk-java', version='ef3edfb4b4') 
 @Grab("org.apache.logging.log4j:log4j-core:2.23.1")
 
 import org.apache.logging.log4j.LogManager;
@@ -14,8 +14,6 @@ import com.alvarium.annotators.Annotator;
 import com.alvarium.utils.PropertyBag;
 
 def call(List<String> annotatorKinds, Map<String,String> optionalParameters=[:], byte[] newData) {
-    println "TAG IS on the next line"
-    println env.TAG
     String artifactPath = optionalParameters['artifactPath'] ? optionalParameters['artifactPath'] : null
     String checksumPath
     String sourceCodeChecksumPath = optionalParameters['sourceCodeChecksumPath'] ? optionalParameters['sourceCodeChecksumPath'] : "${JENKINS_HOME}/${JOB_NAME}/${BUILD_NUMBER}/checksum"

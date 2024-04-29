@@ -1,6 +1,6 @@
 @GrabResolver(name='jitpack.io', root='https://jitpack.io/')
 @Grab("com.google.errorprone:error_prone_annotations:2.20.0") // fixes alvarium import error
-@Grab(group='com.github.michaelehab', module='alvarium-sdk-java', version='fb347ac5bf') 
+@Grab(group='com.github.michaelehab', module='alvarium-sdk-java', version='ef3edfb4b4') 
 @Grab("org.apache.logging.log4j:log4j-core:2.23.1")
 
 import java.util.Map;
@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 import com.alvarium.SdkInfo;
 
 import com.alvarium.contracts.AnnotationType;
+import com.alvarium.contracts.LayerType;
+import com.alvarium.tag.TagWriter;
 
 import com.alvarium.annotators.Annotator;
 import com.alvarium.annotators.AnnotatorConfig;
@@ -33,7 +35,13 @@ def call(
     AnnotatorFactory annotatorFactory = new AnnotatorFactory();
     List<Annotator> annotators = []
     Map<String, Object> properties = new HashMap<String, Object>()
-    properties.put("CiCdTag", env.TAG)
+    Map<LayerType, TagWriter> overrides = new HashMap<>();
+
+    overrides.put(LayerType.CiCd, () -> {
+        return env.GIT_COMMIT;
+    });
+
+    properties.put("overrides", overrides)
 
     for (annotatorKind in annotatorKinds) {
         Annotator annotator
