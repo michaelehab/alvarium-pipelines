@@ -23,7 +23,6 @@ import com.alvarium.annotators.SourceCodeAnnotatorProps;
 import com.alvarium.utils.PropertyBag;
 import com.alvarium.utils.ImmutablePropertyBag;
 
-@NonCPS
 def call(
     List<String> annotatorKinds,
     String artifactPath,
