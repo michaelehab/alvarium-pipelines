@@ -41,7 +41,7 @@ def call(
     overrides.put(LayerType.CiCd, new TagWriter() {
         @Override
         String writeTag() {
-            return "Custom tag value for Application"
+            return System.getenv("GIT_COMMIT");
         }
     })
 
