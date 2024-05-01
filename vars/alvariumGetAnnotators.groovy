@@ -36,13 +36,13 @@ def call(
     List<Annotator> annotators = []
     Map<String, Object> properties = new HashMap<String, Object>()
     Map<LayerType, TagWriter> overrides = new HashMap<>();
-
+    String tag = env.Tag
     overrides.put(LayerType.CiCd, new TagWriter() {
 
         @Override
         @NonCPS
         String writeTag() {
-            return System.getenv("GIT_COMMIT");
+            return tag;
         }
     })
 
