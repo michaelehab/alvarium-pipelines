@@ -41,7 +41,7 @@ def call(
         @Override
         @NonCPS
         String writeTag() {
-            return System.getenv("TAG");
+            return "HARDCODED TAG";
         }
     })
 
