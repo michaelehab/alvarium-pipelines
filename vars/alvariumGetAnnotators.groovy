@@ -41,7 +41,7 @@ def call(
         @Override
         @NonCPS
         String writeTag() {
-            return "HARDCODED TAG";
+            return getEnvTag();
         }
     })
 
@@ -117,4 +117,9 @@ def getAnnotatorConfig(sdkInfo, annotatorKind) {
                 break;
         }
     }
+}
+
+@NonCPS
+def getEnvTag(){
+    return env.Tag
 }
