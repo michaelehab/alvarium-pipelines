@@ -121,5 +121,5 @@ def getAnnotatorConfig(sdkInfo, annotatorKind) {
 
 @NonCPS
 def getEnvTag(){
-    return env.Tag
+    return env.GIT_COMMIT
 }
