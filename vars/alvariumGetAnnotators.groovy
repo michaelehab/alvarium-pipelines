@@ -41,7 +41,7 @@ def call(
         @Override
         @NonCPS
         String writeTag() {
-            return getEnvTag();
+            return getCommitSha();
         }
     })
 
@@ -120,6 +120,6 @@ def getAnnotatorConfig(sdkInfo, annotatorKind) {
 }
 
 @NonCPS
-def getEnvTag(){
+def getCommitSha(){
     return env.GIT_COMMIT
 }
