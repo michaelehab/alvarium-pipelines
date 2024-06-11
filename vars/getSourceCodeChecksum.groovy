@@ -9,19 +9,23 @@ class HashProvider {
         md = MessageDigest.getInstance("MD5")
     }
 
+    @NonCPS
     void update(byte[] buffer, int offset, int length) {
         md.update(buffer, offset, length)
     }
 
+    @NonCPS
     void update(byte[] buffer) {
         md.update(buffer)
     }
 
+    @NonCPS
     String getValue() {
         byte[] digest = md.digest()
         digest.collect { String.format("%02x", it) }.join()
     }
 
+    @NonCPS
     String derive(byte[] input) {
         md.update(input)
         getValue()
