@@ -1,36 +1,88 @@
-import groovy.io.FileType
 import java.security.MessageDigest
+import java.nio.file.Files
+import java.nio.file.Paths
 
-def call(sourceCodeDirectory) {
-    def dir = new File(sourceCodeDirectory)
-    def md5s = []
-    dir.traverse(type: FileType.FILES) { file ->
-        md5s << calculateMD5(file)
+class HashProvider {
+    MessageDigest md
+
+    HashProvider() {
+        md = MessageDigest.getInstance("MD5")
     }
 
-    def finalMD5 = calculateMD5(new ByteArrayInputStream(md5s.join().getBytes()))
-    print "Calcukated checksum for " + sourceCodeDirectory
-    return finalMD5
+    void update(byte[] buffer, int offset, int length) {
+        md.update(buffer, offset, length)
+    }
+
+    void update(byte[] buffer) {
+        md.update(buffer)
+    }
+
+    String getValue() {
+        byte[] digest = md.digest()
+        digest.collect { String.format("%02x", it) }.join()
+    }
+
+    String derive(byte[] input) {
+        md.update(input)
+        getValue()
+    }
 }
 
 @NonCPS
-def calculateMD5(input) {
-    MessageDigest md = MessageDigest.getInstance("MD5")
-    if (input instanceof File) {
-        input.withInputStream { is ->
-            byte[] buffer = new byte[8192]
-            int read
-            while ((read = is.read(buffer)) > 0) {
-                md.update(buffer, 0, read)
+def getAllFiles(String path) {
+    def files = []
+    def directory = new File(path)
+
+    if (directory.isDirectory()) {
+        def directoryFiles = directory.listFiles()
+        if (directoryFiles != null) {
+            directoryFiles.each { file ->
+                if (file.isFile()) {
+                    files << file.getAbsolutePath()
+                } else if (file.isDirectory()) {
+                    files += getAllFiles(file.getAbsolutePath())
+                }
             }
         }
-    } else if (input instanceof ByteArrayInputStream) {
-        byte[] buffer = new byte[8192]
-        int read
-        while ((read = input.read(buffer)) > 0) {
-            md.update(buffer, 0, read)
+    } else if (directory.isFile()) {
+        files << directory.getAbsolutePath()
+    }
+    files
+}
+
+@NonCPS
+def readAndHashFile(String filePath, HashProvider hashProvider) {
+    def fs = new FileInputStream(filePath)
+    def buffer = new byte[8192]
+    def bytesRead = 0
+    while (true) {
+        bytesRead = fs.read(buffer)
+        if (bytesRead == -1) { // indicates EOF
+            break
+        } else {
+            hashProvider.update(buffer, 0, bytesRead)
         }
     }
-    byte[] md5sum = md.digest()
-    md5sum.collect { String.format("%02x", it) }.join()
+    fs.close()
+    hashProvider.getValue()
+}
+
+@NonCPS
+def generateChecksum(String path, HashProvider hashProvider) {
+    def filePaths = getAllFiles(path)
+    for (int i = 0; i < filePaths.size(); i++) {
+        def hashThenPath = readAndHashFile(filePaths[i], hashProvider) + "  " + filePaths[i]
+        filePaths[i] = hashThenPath
+    }
+    filePaths.sort()
+
+    def hashesAndFiles = filePaths.join("\n") + "\n"
+    def sourceCodeChecksum = hashProvider.derive(hashesAndFiles.getBytes())
+
+    sourceCodeChecksum
+}
+
+def call(sourceCodeDir) {
+    def hashProvider = new HashProvider()
+    generateChecksum(sourceCodeDir, hashProvider)
 }
