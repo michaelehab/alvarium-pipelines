@@ -8,5 +8,6 @@ import com.alvarium.hash.HashType;
 
 def call(sourceCodeDir) {
     CheckSumCalculator checkSumCalculator = new CheckSumCalculator(HashType.MD5Hash)
+    print "Calculating source-code checksum for " + sourceCodeDir
     checkSumCalculator.generateChecksum(sourceCodeDir)
 }
