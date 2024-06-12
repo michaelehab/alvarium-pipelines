@@ -68,7 +68,7 @@ def call(
             case "source-code":
                 annotator = annotatorFactory.getAnnotator(cfg, sdkInfo, logger)
                 SourceCodeAnnotatorProps props = new SourceCodeAnnotatorProps(
-                    "${WORKSPACE}",
+                    "${WORKSPACE}".toString(),
                     sourceCodeChecksumPath
                 )
                 print "SDK has source-code checksum path: " + props.getSourceCodePath()
