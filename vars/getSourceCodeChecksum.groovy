@@ -4,8 +4,9 @@
 @Grab("org.apache.logging.log4j:log4j-core:2.23.1")
 
 import com.alvarium.annotators.sourcecode.CheckSumCalculator;
+import com.alvarium.hash.HashType;
 
 def call(sourceCodeDir) {
-    CheckSumCalculator checkSumCalculator = new CheckSumCalculator("md5")
+    CheckSumCalculator checkSumCalculator = new CheckSumCalculator(HashType.MD5Hash)
     checkSumCalculator.generateChecksum(sourceCodeDir)
 }
