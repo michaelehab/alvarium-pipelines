@@ -71,7 +71,7 @@ def call(
                     "${WORKSPACE}".toString(),
                     sourceCodeChecksumPath
                 )
-                print "SDK has source-code checksum path: " + props.getSourceCodePath()
+                print "SDK has source-code path: " + props.getSourceCodePath()
                 properties.put(AnnotationType.SourceCode.name(), props)
                 annotators.add(annotator)
                 break;
